@@ -182,6 +182,52 @@ document.addEventListener('DOMContentLoaded', () => {
       if (alertBanner) alertBanner.style.display = 'none';
     }
 
+    // Table Assistance Requests (Water Refill / Steward Calls)
+    const requests = typeof RestaurantStorage.getServiceRequests === 'function' 
+      ? RestaurantStorage.getServiceRequests().filter(r => r.status === 'PENDING') 
+      : [];
+    const assistSidebarBadge = document.getElementById('sidebarAssistanceBadge');
+    const assistAlert = document.getElementById('dashboardAssistanceAlert');
+    const assistActions = document.getElementById('assistanceAlertActions');
+
+    if (assistSidebarBadge) {
+      if (requests.length > 0) {
+        assistSidebarBadge.textContent = `${requests.length} Call${requests.length > 1 ? 's' : ''}`;
+        assistSidebarBadge.style.display = 'inline-block';
+      } else {
+        assistSidebarBadge.style.display = 'none';
+      }
+    }
+
+    if (assistAlert && assistActions) {
+      if (requests.length > 0) {
+        assistAlert.style.display = 'block';
+        document.getElementById('assistanceAlertTitle').textContent = `${requests.length} Table Assistance Request${requests.length > 1 ? 's' : ''} Active`;
+        document.getElementById('assistanceAlertDesc').textContent = 'Guests requested water refills or table service.';
+
+        let actionsHtml = '';
+        requests.forEach(req => {
+          const isWater = req.type === 'WATER';
+          actionsHtml += `
+            <div class="d-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm border">
+              <span class="badge ${isWater ? 'bg-primary' : 'bg-warning text-dark'} rounded-pill">
+                ${isWater ? '💧 Water Refill' : '🛎️ Steward Call'}
+              </span>
+              <strong class="text-dark small">Table ${req.tableNumber}</strong>
+              <small class="text-muted">(${RestaurantApp.formatTimeAgo(req.createdAt)})</small>
+              <button class="btn btn-sm btn-success rounded-pill py-0 px-2 fw-bold" onclick="window.AdminController.resolveAssistance('${req.id}')" title="Mark fulfilled">
+                <i class="bi bi-check2"></i> Done
+              </button>
+            </div>
+          `;
+        });
+        assistActions.innerHTML = actionsHtml;
+      } else {
+        assistAlert.style.display = 'none';
+        assistActions.innerHTML = '';
+      }
+    }
+
     // Recent orders stream on Dashboard
     const recentOrdersTable = document.getElementById('dashboardRecentOrdersTable');
     if (recentOrdersTable) {
@@ -458,9 +504,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </td>
           <td class="text-end pe-4">
-            <button class="btn btn-outline-danger btn-sm rounded-circle p-1" style="width: 32px; height: 32px;" onclick="window.AdminController.deleteFoodItem('${item.id}')" title="Delete Dish">
-              <i class="bi bi-trash"></i>
-            </button>
+            <div class="d-inline-flex gap-1">
+              <button class="btn btn-outline-dark btn-sm rounded-circle p-1" style="width: 32px; height: 32px;" onclick="window.AdminController.openEditFoodModal('${item.id}')" title="Edit Dish">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-outline-danger btn-sm rounded-circle p-1" style="width: 32px; height: 32px;" onclick="window.AdminController.deleteFoodItem('${item.id}')" title="Delete Dish">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -642,13 +693,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Add Food Modal
+    // Add / Edit Food Modal
     const foodModalEl = document.getElementById('foodItemModal');
     if (foodModalEl) {
       bsFoodModal = new bootstrap.Modal(foodModalEl);
 
       document.getElementById('foodItemForm').addEventListener('submit', (e) => {
         e.preventDefault();
+        const editId = document.getElementById('editFoodId').value;
         const name = document.getElementById('foodNameInput').value.trim();
         const category = document.getElementById('foodCategorySelect').value;
         const price = parseFloat(document.getElementById('foodPriceInput').value);
@@ -657,13 +709,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const isVeg = document.getElementById('foodIsVegCheck').checked;
         const isBestseller = document.getElementById('foodIsBestsellerCheck').checked;
 
-        RestaurantStorage.addMenuItem({
-          name, category, price, description, image, isVeg, isBestseller, inStock: true
-        });
+        if (editId) {
+          RestaurantStorage.updateMenuItem(editId, {
+            name, category, price, description, image, isVeg, isBestseller
+          });
+          RestaurantApp.showToast(`Updated dish "${name}" successfully!`, 'success');
+        } else {
+          RestaurantStorage.addMenuItem({
+            name, category, price, description, image, isVeg, isBestseller, inStock: true
+          });
+          RestaurantApp.showToast(`Added "${name}" to food catalog!`, 'success');
+        }
 
         bsFoodModal.hide();
         document.getElementById('foodItemForm').reset();
-        RestaurantApp.showToast(`Added ${name} to food catalog!`, 'success');
+        document.getElementById('editFoodId').value = '';
         renderMenuManagement();
       });
     }
@@ -703,11 +763,45 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     openAddFoodModal: () => {
+      document.getElementById('foodItemForm').reset();
+      document.getElementById('editFoodId').value = '';
+      document.getElementById('foodModalTitle').textContent = 'Add New Dish';
       // Populate category options
       const catSelect = document.getElementById('foodCategorySelect');
       const cats = RestaurantStorage.getCategories();
       catSelect.innerHTML = cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
       if (bsFoodModal) bsFoodModal.show();
+    },
+
+    openEditFoodModal: (itemId) => {
+      const item = RestaurantStorage.getMenuItem(itemId);
+      if (!item) return;
+
+      const catSelect = document.getElementById('foodCategorySelect');
+      const cats = RestaurantStorage.getCategories();
+      catSelect.innerHTML = cats.map(c => `<option value="${c.name}" ${c.name === item.category ? 'selected' : ''}>${c.name}</option>`).join('');
+
+      document.getElementById('editFoodId').value = item.id;
+      document.getElementById('foodModalTitle').textContent = `Edit Dish: ${item.name}`;
+      document.getElementById('foodNameInput').value = item.name;
+      document.getElementById('foodPriceInput').value = item.price;
+      document.getElementById('foodDescInput').value = item.description || '';
+      document.getElementById('foodImageInput').value = item.image || '';
+      document.getElementById('foodIsVegCheck').checked = Boolean(item.isVeg);
+      document.getElementById('foodIsBestsellerCheck').checked = Boolean(item.isBestseller);
+
+      if (bsFoodModal) bsFoodModal.show();
+    },
+
+    resolveAssistance: (requestId) => {
+      if (typeof RestaurantStorage.resolveServiceRequest === 'function') {
+        const req = RestaurantStorage.resolveServiceRequest(requestId);
+        if (req) {
+          RestaurantApp.playSound('ready');
+          RestaurantApp.showToast(`Table ${req.tableNumber} request marked resolved!`, 'success');
+          refreshAllDashboardData();
+        }
+      }
     },
 
     confirmResetDemo: () => {

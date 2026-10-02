@@ -169,10 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Steward & Water Call buttons
     document.getElementById('btnCallSteward').addEventListener('click', () => {
-      RestaurantApp.showToast(`Floor Steward notified for Table ${currentTable}!`, 'info', 'bi-bell-fill');
+      RestaurantStorage.addServiceRequest({
+        tableNumber: currentTable,
+        type: 'STEWARD',
+        note: `Table ${currentTable} requested a Floor Steward`
+      });
+      RestaurantApp.playSound('ready');
+      RestaurantApp.showToast(`Floor Steward notified for Table ${currentTable}! Admin & Waiter alerted.`, 'info', 'bi-bell-fill');
     });
+
     document.getElementById('btnRequestWater').addEventListener('click', () => {
-      RestaurantApp.showToast(`Water refill requested for Table ${currentTable}.`, 'info', 'bi-droplet-fill');
+      RestaurantStorage.addServiceRequest({
+        tableNumber: currentTable,
+        type: 'WATER',
+        note: `Table ${currentTable} requested water refill`
+      });
+      RestaurantApp.playSound('ready');
+      RestaurantApp.showToast(`Water refill requested for Table ${currentTable}! Waiter & Admin alerted.`, 'info', 'bi-droplet-fill');
     });
   }
 

@@ -13,7 +13,8 @@ const STORAGE_KEYS = {
   SETTINGS: 'restaurant_settings',
   CART_PREFIX: 'restaurant_cart_',
   STAFF: 'restaurant_staff',
-  SESSION: 'restaurant_auth_session'
+  SESSION: 'restaurant_auth_session',
+  SERVICE_REQUESTS: 'restaurant_service_requests'
 };
 
 // Dispatch local event for same-tab reactive updates
@@ -984,6 +985,54 @@ function saveSettings(settings) {
   notifyStorageChange(STORAGE_KEYS.SETTINGS, settings);
 }
 
+// ==========================================
+// SERVICE REQUESTS REPO (Water / Steward Calls)
+// ==========================================
+
+function getServiceRequests() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.SERVICE_REQUESTS)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveServiceRequests(requests) {
+  localStorage.setItem(STORAGE_KEYS.SERVICE_REQUESTS, JSON.stringify(requests));
+  notifyStorageChange(STORAGE_KEYS.SERVICE_REQUESTS, requests);
+}
+
+function addServiceRequest({ tableNumber, type = 'WATER', note = '' }) {
+  const requests = getServiceRequests();
+  const norm = String(tableNumber || '01').padStart(2, '0');
+  const id = `REQ-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+  
+  const newReq = {
+    id,
+    tableNumber: norm,
+    type: type.toUpperCase(), // 'WATER' | 'STEWARD'
+    note: note || (type.toUpperCase() === 'WATER' ? 'Water refill requested' : 'Steward assistance requested'),
+    status: 'PENDING', // 'PENDING' | 'RESOLVED'
+    createdAt: new Date().toISOString()
+  };
+
+  requests.unshift(newReq);
+  saveServiceRequests(requests);
+  return newReq;
+}
+
+function resolveServiceRequest(id) {
+  const requests = getServiceRequests();
+  const idx = requests.findIndex(r => r.id === id);
+  if (idx !== -1) {
+    requests[idx].status = 'RESOLVED';
+    requests[idx].resolvedAt = new Date().toISOString();
+    saveServiceRequests(requests);
+    return requests[idx];
+  }
+  return null;
+}
+
 // Export functions to window for global access
 window.RestaurantStorage = {
   getTables,
@@ -1022,6 +1071,11 @@ window.RestaurantStorage = {
   clearCart,
   getSettings,
   saveSettings,
+  getServiceRequests,
+  saveServiceRequests,
+  addServiceRequest,
+  resolveServiceRequest,
   seedInitialData,
   resetDemoData
 };
+

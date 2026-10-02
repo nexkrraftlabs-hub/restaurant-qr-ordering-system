@@ -3,6 +3,8 @@
  * Manages dish service delivery, table alerts, and cash/card counter settlements.
  */
 
+let prevAssistanceCount = -1;
+
 document.addEventListener('DOMContentLoaded', () => {
   renderWaiterHub();
 
@@ -14,16 +16,57 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderWaiterHub() {
     const orders = RestaurantStorage.getOrders();
     const tables = RestaurantStorage.getTables();
+    const requests = typeof RestaurantStorage.getServiceRequests === 'function'
+      ? RestaurantStorage.getServiceRequests().filter(r => r.status === 'PENDING')
+      : [];
 
     const readyOrders = orders.filter(o => o.status === 'READY');
     const counterPayments = orders.filter(o => o.paymentStatus === 'PENDING');
+
+    // Chime if new assistance request arrives
+    if (prevAssistanceCount !== -1 && requests.length > prevAssistanceCount) {
+      RestaurantApp.playSound('new-order');
+      const latestReq = requests[0];
+      const title = latestReq.type === 'WATER' ? `Table ${latestReq.tableNumber} requested Water Refill!` : `Table ${latestReq.tableNumber} called a Steward!`;
+      RestaurantApp.showToast(title, 'info', 'bi-bell-fill');
+    }
+    prevAssistanceCount = requests.length;
 
     // Badges update
     document.getElementById('waiterReadyCountBadge').textContent = `${readyOrders.length} Ready`;
     document.getElementById('tabReadyBadge').textContent = readyOrders.length;
     document.getElementById('tabCounterBadge').textContent = counterPayments.length;
 
+    const assistCountBadge = document.getElementById('waiterAssistanceCountBadge');
+    const tabAssistanceBadge = document.getElementById('tabAssistanceBadge');
+    const assistBanner = document.getElementById('waiterAssistanceBanner');
+
+    if (assistCountBadge) {
+      if (requests.length > 0) {
+        assistCountBadge.textContent = `${requests.length} Call${requests.length > 1 ? 's' : ''}`;
+        assistCountBadge.style.display = 'inline-block';
+      } else {
+        assistCountBadge.style.display = 'none';
+      }
+    }
+
+    if (tabAssistanceBadge) {
+      tabAssistanceBadge.textContent = requests.length;
+    }
+
+    if (assistBanner) {
+      if (requests.length > 0) {
+        assistBanner.style.setProperty('display', 'flex', 'important');
+        const latest = requests[0];
+        document.getElementById('waiterBannerTitle').textContent = latest.type === 'WATER' ? `Water Refill Alert: Table ${latest.tableNumber}` : `Steward Call: Table ${latest.tableNumber}`;
+        document.getElementById('waiterBannerDesc').textContent = `${requests.length} active assistance call${requests.length > 1 ? 's' : ''} waiting on the floor.`;
+      } else {
+        assistBanner.style.setProperty('display', 'none', 'important');
+      }
+    }
+
     renderReadyOrders(readyOrders);
+    renderAssistanceRequests(requests);
     renderCounterPayments(counterPayments);
     renderFloorTables(tables);
   }
@@ -147,6 +190,47 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = html;
   }
 
+  function renderAssistanceRequests(requests) {
+    const container = document.getElementById('waiterAssistanceList');
+    const emptyState = document.getElementById('noAssistanceState');
+    if (!container) return;
+
+    if (requests.length === 0) {
+      container.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    let html = '';
+    requests.forEach(req => {
+      const isWater = req.type === 'WATER';
+      html += `
+        <div class="waiter-card" style="border-top: 6px solid ${isWater ? '#4F7CAC' : '#C58B45'};">
+          <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+            <div>
+              <span class="badge ${isWater ? 'bg-primary' : 'bg-warning text-dark'} rounded-pill px-3 py-1 fw-bold">
+                ${isWater ? '💧 WATER REFILL' : '🛎️ STEWARD CALL'}
+              </span>
+              <span class="fs-4 fw-bold font-serif text-dark ms-2">TABLE ${req.tableNumber}</span>
+            </div>
+            <span class="text-muted small">${RestaurantApp.formatTimeAgo(req.createdAt)}</span>
+          </div>
+
+          <p class="text-dark small mb-3"><strong>Guest Note:</strong> ${req.note}</p>
+
+          <div class="d-flex justify-content-end">
+            <button class="btn ${isWater ? 'btn-primary' : 'btn-dark'} rounded-pill px-4 py-2 fw-bold" onclick="window.WaiterController.resolveAssistance('${req.id}')">
+              <i class="bi bi-check2-circle me-1"></i> ${isWater ? 'DELIVER WATER & COMPLETE' : 'ATTEND GUEST & COMPLETE'}
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
   // ==========================================
   // EXPORTED ACTIONS (WaiterController)
   // ==========================================
@@ -166,6 +250,17 @@ document.addEventListener('DOMContentLoaded', () => {
         RestaurantApp.playSound('ready');
         RestaurantApp.showToast(`Bill collected for Order #${orderId}. Marked PAID!`, 'success', 'bi-cash-coin');
         renderWaiterHub();
+      }
+    },
+
+    resolveAssistance: (requestId) => {
+      if (typeof RestaurantStorage.resolveServiceRequest === 'function') {
+        const req = RestaurantStorage.resolveServiceRequest(requestId);
+        if (req) {
+          RestaurantApp.playSound('success');
+          RestaurantApp.showToast(`Table ${req.tableNumber} request fulfilled!`, 'success', 'bi-check-circle-fill');
+          renderWaiterHub();
+        }
       }
     }
   };

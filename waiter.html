@@ -52,6 +52,7 @@
       </div>
 
       <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-info text-white rounded-pill px-3 py-2" id="waiterAssistanceCountBadge" style="display: none;">0 Calls</span>
         <span class="badge bg-success rounded-pill px-3 py-2" id="waiterReadyCountBadge">0 Ready</span>
         <a href="admin.html" class="btn btn-outline-custom btn-sm rounded-pill" target="_blank">
           <i class="bi bi-speedometer2"></i> Admin
@@ -66,11 +67,32 @@
   <!-- Main Content -->
   <main class="container-fluid px-3 py-3" style="max-width: 900px;">
 
+    <!-- URGENT WATER / STEWARD ASSISTANCE BANNER -->
+    <div id="waiterAssistanceBanner" class="alert alert-info border-info shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center justify-content-between text-dark" style="display: none !important; background: #e6f4fb;">
+      <div class="d-flex align-items-center gap-3">
+        <div class="pulse-indicator bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+          <i class="bi bi-droplet-fill fs-5"></i>
+        </div>
+        <div>
+          <div class="fw-bold" id="waiterBannerTitle">Water Refill / Service Request</div>
+          <div class="small text-muted" id="waiterBannerDesc">Guest at table needs immediate service.</div>
+        </div>
+      </div>
+      <button class="btn btn-primary-dark btn-sm rounded-pill px-3 fw-bold" onclick="document.getElementById('tabAssistanceBtn').click()">
+        View Calls <i class="bi bi-arrow-right"></i>
+      </button>
+    </div>
+
     <!-- TABS -->
     <ul class="nav nav-pills nav-fill bg-white p-1 rounded-pill shadow-sm border mb-4" role="tablist">
       <li class="nav-item">
         <button class="nav-link active rounded-pill py-2 fw-bold" id="tabReadyBtn" data-bs-toggle="pill" data-bs-target="#tab-ready" type="button">
           <i class="bi bi-bell-fill me-1"></i> Ready to Serve (<span id="tabReadyBadge">0</span>)
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link rounded-pill py-2 fw-bold" id="tabAssistanceBtn" data-bs-toggle="pill" data-bs-target="#tab-assistance" type="button">
+          <i class="bi bi-droplet-fill me-1 text-primary"></i> Water & Calls (<span id="tabAssistanceBadge">0</span>)
         </button>
       </li>
       <li class="nav-item">
@@ -103,6 +125,24 @@
           <div class="fs-1 text-muted mb-2">🛎️</div>
           <h5 class="fw-bold">All Orders Delivered!</h5>
           <p class="text-muted small m-0">No dishes are currently waiting for pickup in the kitchen pass.</p>
+        </div>
+      </div>
+
+      <!-- TAB: WATER & ASSISTANCE CALLS -->
+      <div class="tab-pane fade" id="tab-assistance">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold m-0 font-serif">Table Water Refill & Steward Calls</h5>
+          <span class="text-muted small">Deliver water or attend guests</span>
+        </div>
+
+        <div id="waiterAssistanceList" class="d-flex flex-column gap-3">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div id="noAssistanceState" class="waiter-card text-center py-5" style="display: none;">
+          <div class="fs-1 text-muted mb-2">💧</div>
+          <h5 class="fw-bold">No Active Table Calls</h5>
+          <p class="text-muted small m-0">All guests have been attended to and glasses filled!</p>
         </div>
       </div>
 
