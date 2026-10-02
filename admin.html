@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Saffron & Spice | SaaS Admin & Operations Dashboard</title>
+  <meta name="description" content="Centralized restaurant management: live order dispatching, auto QR table standees, kitchen monitors, and instant billing.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 & Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+
+  <style>
+    .admin-section {
+      display: none;
+    }
+    .admin-section.active {
+      display: block;
+    }
+    /* Mobile orders table hiding -> card conversion */
+    @media (max-width: 991px) {
+      .desktop-orders-table-wrapper {
+        display: none !important;
+      }
+      .mobile-orders-cards-wrapper {
+        display: flex !important;
+        flex-direction: column;
+        gap: 14px;
+      }
+    }
+    @media (min-width: 992px) {
+      .mobile-orders-cards-wrapper {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body style="background-color: var(--color-bg);">
+
+  <!-- Mobile Backdrop Overlay for Drawer Sidebar -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- ==========================================
+       ADMIN SIDEBAR (DESKTOP + MOBILE DRAWER)
+       ========================================== -->
+  <nav class="admin-sidebar" id="adminSidebar">
+    <!-- Brand -->
+    <div class="sidebar-brand">
+      <div style="width: 38px; height: 38px; background: var(--color-accent); color: #ffffff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: var(--font-serif); font-size: 20px;">
+        S
+      </div>
+      <div>
+        <div class="fw-bold text-white lh-1" style="font-family: var(--font-serif); font-size: 16px;">Saffron & Spice</div>
+        <div class="text-secondary" style="font-size: 11px;">Operations Suite</div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <ul class="sidebar-menu">
+      <li>
+        <a class="sidebar-link active" data-target="dashboard">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="orders">
+          <i class="bi bi-bell"></i>
+          <span>Live Orders</span>
+          <span class="badge bg-warning text-dark ms-auto rounded-pill" id="sidebarNewOrdersBadge" style="display: none;">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="tables">
+          <i class="bi bi-qr-code"></i>
+          <span>Tables & QR</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" href="kitchen.html" target="_blank">
+          <i class="bi bi-fire"></i>
+          <span>Kitchen KDS <i class="bi bi-box-arrow-up-right small ms-1 opacity-50"></i></span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" href="waiter.html" target="_blank">
+          <i class="bi bi-person-badge"></i>
+          <span>Waiter Hub <i class="bi bi-box-arrow-up-right small ms-1 opacity-50"></i></span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="menu">
+          <i class="bi bi-journal-text"></i>
+          <span>Menu Catalog</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="categories">
+          <i class="bi bi-tags"></i>
+          <span>Categories</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="invoices">
+          <i class="bi bi-receipt"></i>
+          <span>Billing & Invoices</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="analytics">
+          <i class="bi bi-graph-up"></i>
+          <span>Analytics</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-link" data-target="settings">
+          <i class="bi bi-gear"></i>
+          <span>Settings & Reset</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Admin Profile & Quick Links -->
+    <div class="p-3 border-top border-secondary border-opacity-25 bg-black bg-opacity-20">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <div class="bg-secondary rounded-circle text-white d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: 13px;">
+            AD
+          </div>
+          <div>
+            <div class="text-white small fw-bold lh-1">Manager Admin</div>
+            <div class="text-secondary" style="font-size: 11px;">admin@demo.com</div>
+          </div>
+        </div>
+        <a href="index.html" class="btn btn-sm btn-outline-secondary py-1 px-2 text-white" title="Demo Portal">
+          <i class="bi bi-door-open"></i>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       MOBILE TOP HEADER
+       ========================================== -->
+  <header class="admin-header-mobile">
+    <button class="btn btn-light border p-2 d-flex align-items-center justify-content-center" id="btnToggleSidebar" style="width: 44px; height: 44px;" aria-label="Toggle navigation">
+      <i class="bi bi-list fs-4"></i>
+    </button>
+    <div class="font-serif fw-bold text-dark fs-5" id="mobileHeaderTitle">Dashboard</div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="window.AdminController.quickSimulateOrder()" title="Simulate incoming order">
+        <i class="bi bi-plus-lg"></i> Test Order
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN CONTENT CONTAINER
+       ========================================== -->
+  <div class="admin-content-area">
+
+    <!-- TOP DESKTOP HEADER BAR -->
+    <div class="d-none d-lg-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+      <div>
+        <h2 class="font-serif fw-bold text-dark m-0" id="desktopPageHeading">Operations Dashboard</h2>
+        <p class="text-muted small m-0">Live restaurant operations, automatic QR table provisioning & billing</p>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-custom btn-sm rounded-pill" onclick="window.AdminController.quickSimulateOrder()">
+          <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Simulate Test Order
+        </button>
+        <button class="btn btn-primary-dark btn-sm rounded-pill" onclick="window.AdminController.openAddTableModal()">
+          <i class="bi bi-plus-circle me-1"></i> Add Table & Auto QR
+        </button>
+        <a href="customer.html?table=07" target="_blank" class="btn btn-outline-custom btn-sm rounded-pill">
+          <i class="bi bi-phone me-1"></i> Customer View (T07)
+        </a>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 1: DASHBOARD OVERVIEW
+         ========================================== -->
+    <div id="section-dashboard" class="admin-section active">
+      
+      <!-- Metrics Grid -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+              <span>Today's Orders</span>
+              <i class="bi bi-bag-check fs-5 text-primary"></i>
+            </div>
+            <h3 class="fw-bold text-dark m-0" id="metricTotalOrders">0</h3>
+            <div class="small text-muted mt-1" id="metricOrdersSub">Updated live</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+              <span>Today's Revenue</span>
+              <i class="bi bi-currency-rupee fs-5 text-success"></i>
+            </div>
+            <h3 class="fw-bold text-success m-0" id="metricTotalRevenue">₹0</h3>
+            <div class="small text-muted mt-1">Paid invoices</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+              <span>In Kitchen</span>
+              <i class="bi bi-fire fs-5 text-warning"></i>
+            </div>
+            <h3 class="fw-bold text-warning m-0" id="metricInKitchen">0</h3>
+            <div class="small text-muted mt-1">Preparing right now</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+              <span>Ready / Served</span>
+              <i class="bi bi-bell-fill fs-5 text-info"></i>
+            </div>
+            <h3 class="fw-bold text-info m-0" id="metricReadyOrders">0</h3>
+            <div class="small text-muted mt-1">Ready for pickup</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Urgent Action Banners (New Orders awaiting approval) -->
+      <div id="dashboardNewOrdersAlert" class="mb-4" style="display: none;">
+        <div class="alert alert-warning border-warning shadow-sm rounded-4 p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="pulse-indicator bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+              <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            </div>
+            <div>
+              <h6 class="fw-bold text-dark mb-0" id="newOrdersAlertCount">0 New Orders Waiting for Acceptance</h6>
+              <div class="small text-dark text-opacity-75">Accept immediately so kitchen can start preparing.</div>
+            </div>
+          </div>
+          <button class="btn btn-dark btn-sm rounded-pill px-4 fw-bold" onclick="window.AdminController.navigateToTab('orders')">
+            Review Orders <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Tables Overview -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="font-serif fw-bold m-0">Live Dining Room Tables</h5>
+            <p class="text-muted small m-0">Current seating status and active table sessions</p>
+          </div>
+          <button class="btn btn-outline-custom btn-sm rounded-pill" onclick="window.AdminController.navigateToTab('tables')">
+            Manage All Tables
+          </button>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3" id="dashboardTablesGrid">
+            <!-- Dynamically populated table status pills -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders Stream -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="font-serif fw-bold m-0">Recent Order Activity</h5>
+            <p class="text-muted small m-0">Real-time incoming customer transactions</p>
+          </div>
+          <button class="btn btn-outline-custom btn-sm rounded-pill" onclick="window.AdminController.navigateToTab('orders')">
+            View All Orders
+          </button>
+        </div>
+        <div class="card-body p-4">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr class="small text-uppercase text-muted">
+                  <th>Order ID</th>
+                  <th>Table</th>
+                  <th>Items Summary</th>
+                  <th>Total</th>
+                  <th>Order Status</th>
+                  <th>Payment</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardRecentOrdersTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==========================================
+         SECTION 2: LIVE ORDERS MANAGEMENT
+         ========================================== -->
+    <div id="section-orders" class="admin-section">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h4 class="font-serif fw-bold text-dark m-0">Order Management</h4>
+          <p class="text-muted small m-0">Accept, dispatch, update and monitor orders across all tables</p>
+        </div>
+        
+        <!-- Status Filter Pills -->
+        <div class="d-flex flex-wrap gap-2" id="orderStatusFilters">
+          <button class="btn btn-dark btn-sm rounded-pill px-3 active" data-filter="ALL">All</button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-filter="NEW">New</button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-filter="ACCEPTED">Accepted</button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-filter="PREPARING">Preparing</button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-filter="READY">Ready</button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-filter="SERVED">Served</button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-filter="COMPLETED">Completed</button>
+        </div>
+      </div>
+
+      <!-- DESKTOP ORDERS TABLE -->
+      <div class="card border-0 shadow-sm rounded-4 desktop-orders-table-wrapper">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small text-uppercase text-muted">
+                  <th class="ps-4">Order</th>
+                  <th>Table</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Special Notes</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th class="text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE ORDERS CARDS (MANDATORY REQUIREMENT) -->
+      <div class="mobile-orders-cards-wrapper" id="adminOrdersCardsContainer">
+        <!-- Converted into clean touch cards on mobile -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="noOrdersFoundState" class="text-center py-5" style="display: none;">
+        <i class="bi bi-inbox fs-1 text-muted opacity-50"></i>
+        <h5 class="fw-bold mt-2">No Orders Found</h5>
+        <p class="text-muted small">No orders match the selected filter criteria.</p>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 3: TABLE MANAGEMENT & AUTO QR
+         ========================================== -->
+    <div id="section-tables" class="admin-section">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h4 class="font-serif fw-bold text-dark m-0">Table Management & Auto QR</h4>
+          <p class="text-muted small m-0">Adding any table automatically generates unique IDs, live QR codes and downloadable tent cards</p>
+        </div>
+        <button class="btn btn-primary-dark rounded-pill px-4" onclick="window.AdminController.openAddTableModal()">
+          <i class="bi bi-plus-lg me-1"></i> Add New Table
+        </button>
+      </div>
+
+      <!-- Table Cards Grid -->
+      <div class="row g-3" id="adminTablesGrid">
+        <!-- Dynamically rendered table cards -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 4: MENU CATALOG MANAGEMENT
+         ========================================== -->
+    <div id="section-menu" class="admin-section">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h4 class="font-serif fw-bold text-dark m-0">Food Menu Catalog</h4>
+          <p class="text-muted small m-0">Manage dishes, pricing, inventory stock availability and culinary tags</p>
+        </div>
+        <button class="btn btn-primary-dark rounded-pill px-4" onclick="window.AdminController.openAddFoodModal()">
+          <i class="bi bi-plus-lg me-1"></i> Add Food Item
+        </button>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small text-uppercase text-muted">
+                  <th class="ps-4">Dish</th>
+                  <th>Category</th>
+                  <th>Diet</th>
+                  <th>Price</th>
+                  <th>Stock Status</th>
+                  <th class="text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminMenuTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 5: CATEGORIES MANAGEMENT
+         ========================================== -->
+    <div id="section-categories" class="admin-section">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h4 class="font-serif fw-bold text-dark m-0">Menu Categories</h4>
+          <p class="text-muted small m-0">Organize dishes into intuitive categories</p>
+        </div>
+        <button class="btn btn-primary-dark rounded-pill px-4" onclick="window.AdminController.openAddCategoryModal()">
+          <i class="bi bi-plus-lg me-1"></i> Add Category
+        </button>
+      </div>
+
+      <div class="row g-3" id="adminCategoriesGrid">
+        <!-- Categories cards -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 6: BILLING & TAX INVOICES
+         ========================================== -->
+    <div id="section-invoices" class="admin-section">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h4 class="font-serif fw-bold text-dark m-0">Tax Invoices & Billing Archive</h4>
+          <p class="text-muted small m-0">Official digital receipts generated with GST calculations</p>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small text-uppercase text-muted">
+                  <th class="ps-4">Invoice #</th>
+                  <th>Order #</th>
+                  <th>Table</th>
+                  <th>Amount</th>
+                  <th>Payment Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th class="text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminInvoicesTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 7: ANALYTICS & INSIGHTS
+         ========================================== -->
+    <div id="section-analytics" class="admin-section">
+      <div class="mb-4">
+        <h4 class="font-serif fw-bold text-dark m-0">Sales Analytics & Insights</h4>
+        <p class="text-muted small m-0">Performance indicators, top dishes, and revenue distribution</p>
+      </div>
+
+      <div class="row g-3">
+        <!-- Popular Items Breakdown -->
+        <div class="col-12 col-lg-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="fw-bold mb-3">Top Ordered Delicacies</h5>
+            <div id="analyticsTopItemsList" class="d-flex flex-column gap-3">
+              <!-- Dynamically populated top dishes with progress bars -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Breakdown -->
+        <div class="col-12 col-lg-6">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="fw-bold mb-3">Settlement Summary</h5>
+            <div class="p-3 bg-light rounded-3 mb-3 border">
+              <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted">Online Payments (UPI/Card)</span>
+                <strong class="text-success" id="analyticsOnlineRevenue">₹0</strong>
+              </div>
+              <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted">Counter Cash Settlements</span>
+                <strong class="text-primary" id="analyticsCounterRevenue">₹0</strong>
+              </div>
+              <div class="d-flex justify-content-between py-2">
+                <span class="text-muted">Pending Counter Payments</span>
+                <strong class="text-warning" id="analyticsPendingCounter">₹0</strong>
+              </div>
+            </div>
+            <p class="small text-muted mb-0">Total revenue calculated from all recorded demo invoices.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         SECTION 8: SETTINGS & RESET DEMO
+         ========================================== -->
+    <div id="section-settings" class="admin-section">
+      <div class="mb-4">
+        <h4 class="font-serif fw-bold text-dark m-0">System Settings & Demo Utilities</h4>
+        <p class="text-muted small m-0">Configure restaurant profile, tax rates, and manage demo simulation</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-12 col-lg-7">
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Restaurant Information</h5>
+            <form id="restaurantSettingsForm">
+              <div class="mb-3">
+                <label class="form-label small fw-bold">Restaurant Name</label>
+                <input type="text" id="settingRestName" class="form-control" required>
+              </div>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label small fw-bold">GST Rate (%)</label>
+                  <input type="number" id="settingTaxRate" step="0.5" class="form-control" required>
+                </div>
+                <div class="col-6">
+                  <label class="form-label small fw-bold">GSTIN</label>
+                  <input type="text" id="settingGSTIN" class="form-control" required>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-bold">Address</label>
+                <input type="text" id="settingAddress" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-bold">Contact Phone</label>
+                <input type="text" id="settingPhone" class="form-control" required>
+              </div>
+              <button type="submit" class="btn btn-primary-dark rounded-pill px-4">
+                Save Restaurant Settings
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+          <!-- Reset Demo Card -->
+          <div class="card border-danger border-opacity-25 shadow-sm rounded-4 p-4 mb-4 bg-danger bg-opacity-10">
+            <h5 class="fw-bold text-danger mb-2"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset Demo Data</h5>
+            <p class="small text-muted mb-3">
+              Restore the initial 10 tables, 24 gourmet dishes, seed orders, and reset all demo modifications back to default state.
+            </p>
+            <button class="btn btn-danger rounded-pill px-4 fw-bold" onclick="window.AdminController.confirmResetDemo()">
+              Reset Demo to Factory State
+            </button>
+          </div>
+
+          <!-- Quick Demo Simulator Card -->
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-magic me-1"></i> Instant Testing Simulator</h6>
+            <p class="small text-muted mb-3">Quickly inject simulated orders to test multi-dashboard live synchronization.</p>
+            <div class="d-flex flex-column gap-2">
+              <button class="btn btn-outline-custom btn-sm rounded-pill text-start" onclick="window.AdminController.quickSimulateOrder()">
+                <i class="bi bi-plus-circle me-1"></i> Simulate New Incoming Customer Order
+              </button>
+              <a href="customer.html?table=11" target="_blank" class="btn btn-outline-custom btn-sm rounded-pill text-start">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Open Customer View for Table 11
+              </a>
+              <a href="kitchen.html" target="_blank" class="btn btn-outline-custom btn-sm rounded-pill text-start">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Open Kitchen KDS in new tab
+              </a>
+              <a href="waiter.html" target="_blank" class="btn btn-outline-custom btn-sm rounded-pill text-start">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Open Waiter View in new tab
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       MODAL: ADD TABLE (CRITICAL REQUIREMENT)
+       ========================================== -->
+  <div class="modal fade" id="addTableModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+        <div class="modal-header border-0 bg-dark text-white px-4 pt-4 pb-3">
+          <div>
+            <span class="badge bg-warning text-dark px-3 py-1 mb-1 rounded-pill fw-bold">PROVISION DINING TABLE</span>
+            <h5 class="modal-title font-serif fw-bold text-white mt-1">Add Table & Generate QR</h5>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="addTableForm">
+            <div class="mb-3">
+              <label for="tableNumberInput" class="form-label small fw-bold">Table Number</label>
+              <input type="text" id="tableNumberInput" class="form-control" placeholder="e.g. 11" required>
+              <div class="form-text small">Enter table number (e.g. 11, 12). Unique ID will be generated automatically.</div>
+            </div>
+            <div class="mb-3">
+              <label for="tableCapacityInput" class="form-label small fw-bold">Guest Capacity (Seats)</label>
+              <input type="number" id="tableCapacityInput" class="form-control" value="4" min="1" max="20" required>
+            </div>
+            <div class="mb-3">
+              <label for="tableStatusInput" class="form-label small fw-bold">Initial Status</label>
+              <select id="tableStatusInput" class="form-select">
+                <option value="available" selected>Available (Green)</option>
+                <option value="reserved">Reserved (Yellow)</option>
+              </select>
+            </div>
+            <div class="p-3 bg-light rounded-3 border mb-3 small text-muted">
+              <i class="bi bi-info-circle-fill text-primary me-1"></i>
+              Upon creation, the system will automatically generate a unique ID (`table-11`), bind QR code pointing to <code>customer.html?table=11</code>, and launch the QR preview modal with download & print buttons.
+            </div>
+            <button type="submit" class="btn btn-primary-dark w-100 rounded-pill py-3 fw-bold" id="btnSubmitCreateTable">
+              <i class="bi bi-qr-code me-1"></i> CREATE TABLE & GENERATE QR
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: ADD / EDIT FOOD ITEM
+       ========================================== -->
+  <div class="modal fade" id="foodItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+        <div class="modal-header border-0 bg-dark text-white px-4 pt-4 pb-3">
+          <h5 class="modal-title font-serif fw-bold text-white" id="foodModalTitle">Add New Dish</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="foodItemForm">
+            <input type="hidden" id="editFoodId">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Dish Name</label>
+              <input type="text" id="foodNameInput" class="form-control" placeholder="e.g. Kashmiri Rogan Josh" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Category</label>
+                <select id="foodCategorySelect" class="form-select" required></select>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Price (₹)</label>
+                <input type="number" id="foodPriceInput" class="form-control" placeholder="240" min="0" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Description</label>
+              <textarea id="foodDescInput" class="form-control" rows="2" placeholder="Ingredients and culinary notes..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Image URL</label>
+              <input type="url" id="foodImageInput" class="form-control" placeholder="https://images.unsplash.com/...">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="form-check form-switch pt-2">
+                  <input class="form-check-input" type="checkbox" id="foodIsVegCheck" checked>
+                  <label class="form-check-label fw-bold small" for="foodIsVegCheck">Vegetarian 🌱</label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check form-switch pt-2">
+                  <input class="form-check-input" type="checkbox" id="foodIsBestsellerCheck">
+                  <label class="form-check-label fw-bold small" for="foodIsBestsellerCheck">Bestseller ⭐</label>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary-dark w-100 rounded-pill py-3 fw-bold">
+              Save Dish to Catalog
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CONFIRM RESET DEMO
+       ========================================== -->
+  <div class="modal fade" id="resetConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-body text-center p-4">
+          <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 28px;">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+          <h4 class="font-serif fw-bold text-dark">Are you sure?</h4>
+          <p class="text-muted small mb-4">
+            This will remove all demo orders, payments, new tables, and custom edits. The standard 10 tables and 24 demo dishes will be restored.
+          </p>
+          <div class="d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-outline-custom rounded-pill px-4" data-bs-dismiss="modal">
+              CANCEL
+            </button>
+            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" id="btnExecuteReset">
+              RESET DEMO DATA
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDN Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Application Architecture Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

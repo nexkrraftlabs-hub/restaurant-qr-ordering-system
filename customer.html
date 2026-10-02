@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Saffron & Spice | Digital QR Menu & Ordering</title>
+  <meta name="description" content="Instant QR table ordering. Browse gourmet delicacies, customize your meal, and track real-time kitchen preparation.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 & Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+
+  <style>
+    /* Customer mobile optimizations */
+    .hero-banner {
+      position: relative;
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8F7F4 100%);
+      border-radius: var(--radius-xl);
+      padding: 24px 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+    .view-section {
+      display: none;
+    }
+    .view-section.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="bg-body-secondary-subtle" style="background-color: var(--color-bg); padding-bottom: 90px;">
+
+  <!-- ==========================================
+       STICKY CUSTOMER HEADER
+       ========================================== -->
+  <header class="customer-header">
+    <div class="container-fluid max-width-lg px-2 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <a href="index.html" class="text-decoration-none d-flex align-items-center gap-2">
+          <div style="width: 38px; height: 38px; background: var(--color-primary); color: var(--color-accent-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: var(--font-serif); font-size: 20px;">
+            S
+          </div>
+          <div>
+            <div class="fw-bold text-dark lh-1" style="font-size: 15px; font-family: var(--font-serif);">Saffron & Spice</div>
+            <div class="text-muted" style="font-size: 11px;">Modern Dining</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <!-- Table Indicator Badge -->
+        <div class="table-pill-indicator" id="tableHeaderBadge" title="Click to switch or view table info" style="cursor: pointer;">
+          <span class="status-dot"></span>
+          <span id="headerTableNumber">TABLE 07</span>
+        </div>
+
+        <!-- Cart Quick Icon Button -->
+        <button class="btn btn-light rounded-circle p-2 position-relative border" id="btnHeaderCart" style="width: 40px; height: 40px;" aria-label="View Cart">
+          <i class="bi bi-bag text-dark" style="font-size: 18px;"></i>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-warning border border-light" id="headerCartBadge" style="display: none; font-size: 10px;">
+            0
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN CONTENT CONTAINER
+       ========================================== -->
+  <main class="container-fluid px-3 pt-3" style="max-width: 1400px;">
+
+    <!-- ==========================================
+         VIEW 1: MENU & BROWSING (DEFAULT)
+         ========================================== -->
+    <div id="section-menu" class="view-section active">
+
+      <!-- Mobile Hero Section with Animated Blobs -->
+      <div class="hero-banner shadow-sm">
+        <div class="blob-container">
+          <div class="blob blob-1"></div>
+          <div class="blob blob-2"></div>
+        </div>
+        <div class="position-relative" style="z-index: 1;">
+          <div class="d-inline-flex align-items-center gap-2 bg-white px-3 py-1 rounded-pill border mb-2 shadow-sm">
+            <span class="live-badge-dot"></span>
+            <span class="small fw-semibold text-dark" id="heroTableStatusText">Table 07 • Instant Table Service</span>
+          </div>
+          <h1 class="display-6 fw-bold text-dark mb-1" style="font-size: clamp(24px, 5vw, 36px);">
+            Fresh Flavors. <br><span style="color: var(--color-accent);">Crafted Beautifully.</span>
+          </h1>
+          <p class="text-muted small mb-3" style="max-width: 480px;">
+            Browse our artisanal menu, personalize each dish to your taste, and order straight to your table.
+          </p>
+
+          <!-- Search Bar -->
+          <div class="position-relative" style="max-width: 460px;">
+            <i class="bi bi-search position-absolute top-50 translate-middle-y text-muted" style="left: 16px; font-size: 16px;"></i>
+            <input type="text" id="menuSearchInput" class="form-control rounded-pill ps-5 bg-white shadow-sm border-0" placeholder="Search biryani, pizza, cold coffee..." aria-label="Search dishes">
+            <button class="btn position-absolute top-50 translate-middle-y end-0 me-2 text-muted btn-sm" id="clearSearchBtn" style="display: none;">
+              <i class="bi bi-x-circle-fill"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Order Notice Bar if already has ongoing order -->
+      <div id="activeOrderNotice" class="alert alert-dark border-0 shadow-sm rounded-4 p-3 mb-3 d-flex align-items-center justify-content-between text-white" style="display: none !important; background: #1f1f1f;">
+        <div class="d-flex align-items-center gap-3">
+          <div class="pulse-indicator bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+            <i class="bi bi-fire fs-5"></i>
+          </div>
+          <div>
+            <div class="fw-bold small" id="noticeOrderTitle">Order #ORD-1040 is in progress</div>
+            <div class="text-secondary" style="font-size: 12px;" id="noticeOrderStatus">Preparing in kitchen</div>
+          </div>
+        </div>
+        <button class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-3" id="btnTrackActiveOrder">
+          Track Live <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- DESKTOP 3-COLUMN OR MOBILE WRAPPER -->
+      <div class="desktop-layout-wrapper">
+        
+        <!-- LEFT: Desktop Categories Sidebar -->
+        <aside class="desktop-category-sidebar">
+          <h6 class="fw-bold text-uppercase text-muted small mb-3" style="letter-spacing: 1px;">Categories</h6>
+          <div class="d-flex flex-column gap-1" id="desktopCategoryList">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="mt-4 pt-3 border-top">
+            <div class="small fw-bold text-dark mb-1">Dietary Preference</div>
+            <div class="form-check form-switch small">
+              <input class="form-check-input" type="checkbox" id="vegOnlySwitch">
+              <label class="form-check-label fw-semibold" for="vegOnlySwitch">Pure Veg Only 🌱</label>
+            </div>
+          </div>
+        </aside>
+
+        <!-- CENTER: Food Items Grid & Mobile Category Scroll -->
+        <div>
+          <!-- Mobile Horizontal Category Scroll -->
+          <div class="category-scroll-container no-scrollbar mb-2" id="mobileCategoryScroll">
+            <!-- Dynamically rendered pills -->
+          </div>
+
+          <!-- Quick Filters Bar (Veg toggle on mobile) -->
+          <div class="d-flex d-xl-none align-items-center justify-content-between px-2 mb-3">
+            <span class="text-muted small" id="itemsCountLabel">Showing all items</span>
+            <div class="form-check form-switch small m-0">
+              <input class="form-check-input" type="checkbox" id="mobileVegOnlySwitch">
+              <label class="form-check-label fw-semibold small text-success" for="mobileVegOnlySwitch">Veg Only</label>
+            </div>
+          </div>
+
+          <!-- Food Cards Grid -->
+          <div class="row g-3" id="foodGrid">
+            <!-- Dynamically populated food cards -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="noItemsFoundState" class="text-center py-5" style="display: none;">
+            <div class="display-1 text-muted opacity-50 mb-2">🍽️</div>
+            <h5 class="fw-bold text-dark">No dishes found</h5>
+            <p class="text-muted small">Try searching with a different keyword or category.</p>
+            <button class="btn btn-outline-custom btn-sm rounded-pill" id="resetSearchFilterBtn">Show All Items</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Desktop Sticky Cart -->
+        <aside class="desktop-cart-sidebar">
+          <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <h5 class="font-serif fw-bold m-0">Your Order</h5>
+            <span class="badge bg-dark rounded-pill px-3 py-1" id="desktopTableBadge">Table 07</span>
+          </div>
+
+          <div id="desktopCartItemsList" class="mb-3" style="max-height: 380px; overflow-y: auto;">
+            <!-- Cart items -->
+          </div>
+
+          <!-- Desktop Empty Cart Message -->
+          <div id="desktopEmptyCartMessage" class="text-center py-4 text-muted">
+            <i class="bi bi-cart3 fs-1 opacity-25"></i>
+            <p class="small mt-2 mb-0">Your order is currently empty.<br>Add some delicious dishes!</p>
+          </div>
+
+          <!-- Special instructions input -->
+          <div id="desktopCartSummaryBox" style="display: none;">
+            <div class="mb-3">
+              <label for="desktopSpecialInstructions" class="form-label small fw-bold text-muted">Special Cooking Instructions</label>
+              <textarea id="desktopSpecialInstructions" class="form-control form-control-sm" rows="2" placeholder="e.g. Less spicy, no onions, extra lemon..."></textarea>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="bg-light p-3 rounded-3 mb-3 border">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Subtotal</span>
+                <span id="desktopSubtotalVal">₹0</span>
+              </div>
+              <div class="d-flex justify-content-between small text-muted mb-2">
+                <span>Taxes & GST (5%)</span>
+                <span id="desktopTaxVal">₹0</span>
+              </div>
+              <div class="d-flex justify-content-between fw-bold text-dark pt-2 border-top">
+                <span>Grand Total</span>
+                <span id="desktopTotalVal" class="text-primary fs-5">₹0</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary-dark w-100 rounded-pill py-2 fw-bold" id="btnDesktopPlaceOrder">
+              Place Order Now <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 2: LIVE ORDER TRACKING
+         ========================================== -->
+    <div id="section-orders" class="view-section">
+      <div class="max-width-md mx-auto py-2" style="max-width: 650px;">
+        
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div>
+            <h2 class="font-serif fw-bold text-dark mb-0">Live Order Tracking</h2>
+            <p class="text-muted small mb-0">Real-time status synced with kitchen & floor stewards</p>
+          </div>
+          <span class="badge bg-dark rounded-pill px-3 py-2" id="trackingTableBadge">TABLE 07</span>
+        </div>
+
+        <div id="liveOrderContainer">
+          <!-- Active order card populated by JS -->
+        </div>
+
+        <!-- No Active Orders State -->
+        <div id="noActiveOrderState" class="order-tracker-card text-center py-5" style="display: none;">
+          <div class="fs-1 text-muted mb-3">🛎️</div>
+          <h5 class="fw-bold">No Active Order Right Now</h5>
+          <p class="text-muted small mb-4">You don't have any ongoing orders for this table.</p>
+          <button class="btn btn-primary-dark rounded-pill px-4" id="btnGoBackToMenu">
+            Explore Menu & Order
+          </button>
+        </div>
+
+        <!-- Past Completed Orders Accordion -->
+        <div class="mt-4 pt-3 border-top" id="pastOrdersContainer" style="display: none;">
+          <h6 class="fw-bold text-muted small text-uppercase mb-3">Past Orders at this Table</h6>
+          <div id="pastOrdersList" class="d-flex flex-column gap-2"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 3: TABLE INFO & SWITCHER
+         ========================================== -->
+    <div id="section-info" class="view-section">
+      <div class="max-width-md mx-auto py-3" style="max-width: 580px;">
+        <div class="order-tracker-card mb-3">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div style="width: 54px; height: 54px; background: var(--color-accent-light); color: var(--color-accent); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+              🪑
+            </div>
+            <div>
+              <h4 class="font-serif fw-bold m-0" id="infoTableTitle">Table 07</h4>
+              <p class="text-muted small m-0">Saffron & Spice Dining Room</p>
+            </div>
+          </div>
+          <div class="p-3 bg-light rounded-3 mb-3 border">
+            <div class="row g-2 text-center">
+              <div class="col-4">
+                <div class="text-muted small">Status</div>
+                <div class="fw-bold text-success" id="infoTableStatus">Occupied</div>
+              </div>
+              <div class="col-4">
+                <div class="text-muted small">Seating</div>
+                <div class="fw-bold text-dark" id="infoTableCapacity">4 Guests</div>
+              </div>
+              <div class="col-4">
+                <div class="text-muted small">Orders</div>
+                <div class="fw-bold text-dark" id="infoTableOrderCount">1 Active</div>
+              </div>
+            </div>
+          </div>
+
+          <p class="small text-muted mb-3">
+            To simulate moving to a different table or scanning another table's QR standee in this demo, select a table below:
+          </p>
+
+          <div class="input-group mb-3">
+            <label class="input-group-text bg-white" for="switchTableSelect">Switch Table</label>
+            <select class="form-select" id="switchTableSelect"></select>
+            <button class="btn btn-primary-dark" type="button" id="btnConfirmSwitchTable">Switch</button>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-custom w-100 rounded-pill btn-sm" id="btnCallSteward">
+              <i class="bi bi-bell me-1"></i> Call Steward
+            </button>
+            <button class="btn btn-outline-custom w-100 rounded-pill btn-sm" id="btnRequestWater">
+              <i class="bi bi-droplet me-1"></i> Request Water
+            </button>
+          </div>
+        </div>
+
+        <div class="order-tracker-card">
+          <h6 class="fw-bold mb-2">About Saffron & Spice</h6>
+          <p class="text-muted small mb-2">Authentic culinary excellence blending age-old Indian royal recipes with modern artisanal presentation.</p>
+          <div class="small text-muted">
+            <div><i class="bi bi-geo-alt me-1"></i> Plot 42, Heritage Boulevard, Indiranagar, Bengaluru</div>
+            <div><i class="bi bi-telephone me-1"></i> +91 98765 43210 • Open 11:30 AM - 11:30 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==========================================
+       STICKY FLOATING CART BAR (MOBILE ONLY)
+       ========================================== -->
+  <div class="sticky-cart-bar" id="mobileStickyCartBar">
+    <div class="d-flex align-items-center gap-3">
+      <div class="badge rounded-pill bg-warning text-dark px-2 py-1 fw-bold fs-6" id="stickyCartCount">0</div>
+      <div>
+        <div class="fw-bold lh-1" id="stickyCartTotal">₹0</div>
+        <div class="text-secondary small" style="font-size: 11px;">Plus 5% GST</div>
+      </div>
+    </div>
+    <div class="fw-bold d-flex align-items-center gap-1 text-warning">
+      <span>View Cart</span>
+      <i class="bi bi-chevron-right fs-6"></i>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MOBILE BOTTOM NAVIGATION
+       ========================================== -->
+  <nav class="customer-bottom-nav">
+    <a class="bottom-nav-item active" data-nav="menu" id="navItemMenu">
+      <i class="bi bi-book"></i>
+      <span>Menu</span>
+    </a>
+    <a class="bottom-nav-item" data-nav="cart" id="navItemCart">
+      <i class="bi bi-bag"></i>
+      <span>Cart</span>
+      <span class="nav-badge" id="bottomNavCartBadge" style="display: none;">0</span>
+    </a>
+    <a class="bottom-nav-item" data-nav="orders" id="navItemOrders">
+      <i class="bi bi-clock-history"></i>
+      <span>Track</span>
+      <span class="nav-badge" id="bottomNavOrderDot" style="display: none; width: 8px; height: 8px; padding: 0; min-width: 8px; background: #2E9B63;"></span>
+    </a>
+    <a class="bottom-nav-item" data-nav="info" id="navItemInfo">
+      <i class="bi bi-info-circle"></i>
+      <span>Table</span>
+    </a>
+  </nav>
+
+  <!-- ==========================================
+       FOOD DETAIL BOTTOM SHEET
+       ========================================== -->
+  <div class="bottom-sheet-backdrop" id="foodDetailBackdrop"></div>
+  <div class="bottom-sheet-card" id="foodDetailSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-content" id="foodDetailContent">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MOBILE CART BOTTOM SHEET / DRAWER
+       ========================================== -->
+  <div class="bottom-sheet-backdrop" id="cartSheetBackdrop"></div>
+  <div class="bottom-sheet-card" id="cartSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-content">
+      <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+        <div>
+          <h5 class="font-serif fw-bold m-0">Your Table Order</h5>
+          <span class="text-muted small" id="sheetTableLabel">Table 07</span>
+        </div>
+        <button type="button" class="btn-close" id="btnCloseCartSheet" aria-label="Close"></button>
+      </div>
+
+      <div id="mobileCartItemsList" class="mb-3" style="max-height: 280px; overflow-y: auto;">
+        <!-- Items inserted dynamically -->
+      </div>
+
+      <!-- Empty state inside sheet -->
+      <div id="mobileCartEmptyMsg" class="text-center py-4 text-muted">
+        <i class="bi bi-cart3 fs-1 opacity-25"></i>
+        <p class="small mt-2 mb-0">Your cart is currently empty.</p>
+      </div>
+
+      <div id="mobileCartSummarySection" style="display: none;">
+        <div class="mb-3">
+          <label for="mobileSpecialInstructions" class="form-label small fw-bold text-muted">Special Instructions</label>
+          <input type="text" id="mobileSpecialInstructions" class="form-control form-control-sm" placeholder="e.g. Less spicy, no onion...">
+        </div>
+
+        <div class="bg-light p-3 rounded-3 mb-3 border">
+          <div class="d-flex justify-content-between small text-muted mb-1">
+            <span>Subtotal</span>
+            <span id="mobileSubtotalVal">₹0</span>
+          </div>
+          <div class="d-flex justify-content-between small text-muted mb-2">
+            <span>Taxes & GST (5%)</span>
+            <span id="mobileTaxVal">₹0</span>
+          </div>
+          <div class="d-flex justify-content-between fw-bold text-dark pt-2 border-top">
+            <span>Grand Total</span>
+            <span id="mobileTotalVal" class="text-primary fs-5">₹0</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary-dark w-100 rounded-pill py-3 fw-bold" id="btnMobilePlaceOrder">
+          Confirm & Place Order <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SIMULATED DEMO PAYMENT MODAL
+       ========================================== -->
+  <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+        <div class="modal-header border-0 bg-dark text-white px-4 pt-4 pb-3">
+          <div>
+            <span class="badge bg-warning text-dark px-3 py-1 mb-1 rounded-pill fw-bold">DEMO PAYMENT GATEWAY</span>
+            <h5 class="modal-title font-serif fw-bold text-white mt-1">Complete Table Payment</h5>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <!-- Step 1: Selection & Input -->
+          <div id="paymentSelectionStep">
+            <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded-3 mb-3 border">
+              <div>
+                <div class="text-muted small">Payable Amount</div>
+                <div class="display-6 fw-bold text-dark" id="modalPaymentAmount">₹0</div>
+              </div>
+              <span class="badge bg-dark text-white rounded-pill px-3 py-2" id="modalPaymentOrderBadge">ORD-1040</span>
+            </div>
+
+            <!-- Payment Methods Nav Tabs -->
+            <ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded-pill" role="tablist">
+              <li class="nav-item">
+                <button class="nav-link active rounded-pill py-2 small fw-bold" data-bs-toggle="pill" data-bs-target="#tab-upi" type="button">
+                  <i class="bi bi-phone me-1"></i> UPI / QR
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link rounded-pill py-2 small fw-bold" data-bs-toggle="pill" data-bs-target="#tab-card" type="button">
+                  <i class="bi bi-credit-card me-1"></i> Card
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link rounded-pill py-2 small fw-bold" data-bs-toggle="pill" data-bs-target="#tab-netbanking" type="button">
+                  <i class="bi bi-bank me-1"></i> NetBanking
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content mb-3">
+              <!-- UPI Tab -->
+              <div class="tab-pane fade show active" id="tab-upi">
+                <div class="d-flex flex-wrap gap-2 mb-3 justify-content-center">
+                  <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 active">Google Pay</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3">PhonePe</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Paytm</button>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label small fw-bold text-muted">UPI ID / VPA</label>
+                  <input type="text" class="form-control" value="customer@okhdfcbank" readonly>
+                </div>
+              </div>
+
+              <!-- Card Tab -->
+              <div class="tab-pane fade" id="tab-card">
+                <div class="mb-2">
+                  <label class="form-label small fw-bold text-muted">Card Number</label>
+                  <input type="text" class="form-control" value="•••• •••• •••• 4242" readonly>
+                </div>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold text-muted">Expiry</label>
+                    <input type="text" class="form-control" value="12/28" readonly>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold text-muted">CVV</label>
+                    <input type="password" class="form-control" value="•••" readonly>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NetBanking Tab -->
+              <div class="tab-pane fade" id="tab-netbanking">
+                <div class="mb-2">
+                  <label class="form-label small fw-bold text-muted">Select Bank</label>
+                  <select class="form-select">
+                    <option>HDFC Bank</option>
+                    <option>State Bank of India</option>
+                    <option>ICICI Bank</option>
+                    <option>Axis Bank</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary-dark w-100 rounded-pill py-3 fw-bold fs-6 shadow-sm" id="btnConfirmPayOnline">
+              <i class="bi bi-shield-lock-fill me-1"></i> Pay Now (Demo Simulated)
+            </button>
+          </div>
+
+          <!-- Step 2: Processing Animation -->
+          <div id="paymentProcessingStep" class="text-center py-4" style="display: none;">
+            <div class="spinner-border text-warning mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+            <h5 class="fw-bold">Contacting Bank Gateway...</h5>
+            <p class="text-muted small">Please do not refresh or close this tab.</p>
+          </div>
+
+          <!-- Step 3: Success Screen -->
+          <div id="paymentSuccessStep" class="text-center py-4" style="display: none;">
+            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 64px; height: 64px; font-size: 32px;">
+              <i class="bi bi-check2"></i>
+            </div>
+            <h4 class="font-serif fw-bold text-dark">Payment Successful!</h4>
+            <p class="text-muted small mb-4" id="successTxnNote">Transaction ID: TXN-DEMO-982341<br>Thank you for dining at Saffron & Spice.</p>
+
+            <div class="d-flex flex-column gap-2">
+              <a href="#" class="btn btn-primary-dark rounded-pill py-2 fw-bold" id="btnViewDigitalInvoice">
+                <i class="bi bi-receipt me-1"></i> View & Download Tax Bill
+              </a>
+              <button type="button" class="btn btn-outline-custom rounded-pill py-2" data-bs-dismiss="modal">
+                Close & Return
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDN Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Application Architecture Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/customer.js"></script>
+</body>
+</html>
